@@ -1,0 +1,17 @@
+[package]
+name = "catchr"
+version = "0.1.0"
+authors = ["Dzejkop <jakubtrad@gmail.com>"]
+edition = "2018"
+description = "A testing framework inspired by Catch for C++"
+license = "MIT"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "1.0", features = ["full", "extra-traits"] }
+quote = "1.0"
+proc-macro2 = { version = "1.0", features = [] }
+itertools = "0.8.2"
+catchr-core = { path = "../core" }
