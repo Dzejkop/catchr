@@ -1,3 +1,5 @@
+![Rust](https://github.com/Dzejkop/catchr/workflows/Rust/badge.svg)
+
 # Catchr
 
 A testing framework for Rust inspired by [Catch for C++](link).
