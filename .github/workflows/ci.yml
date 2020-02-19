@@ -1,0 +1,16 @@
+name: Ci
+on: [push]
+
+jobs:
+  build:
+    name: Format, Clippy & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: format
+        uses: icepuma/rust-action@1.41.0
+        with:
+          args: cargo fmt & cargo clippy & cargo test
+      - name: test
+        uses: icepuma/rust-action@1.41.0
+        with:
+          args: cargo clippy --workspace -- -Dwarnings & cargo test --workspace
