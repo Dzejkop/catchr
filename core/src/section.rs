@@ -54,7 +54,7 @@ impl Section {
         SectionKeyword::peek(input)
     }
 
-    fn to_tokens_inner(&self, scope: Scope, tokens: &mut TokenStream) {
+    fn to_tokens_inner(&self, mut scope: Scope, tokens: &mut TokenStream) {
         if self.body.is_top_level() {
             let my_stmts: Vec<_> =
                 self.body.items().iter().filter_map(|i| i.stmt()).collect();
@@ -80,8 +80,8 @@ impl Section {
                 let sb = self.body.get_stmts_before(idx);
                 let sa = self.body.get_stmts_after(idx);
 
-                let new_scope = scope.push(&sb, &sa);
-                let inner = section.quote_inner(new_scope);
+                scope.push_mut(&sb, &sa);
+                let inner = section.quote_inner(scope.clone());
 
                 stream.push(inner);
             }

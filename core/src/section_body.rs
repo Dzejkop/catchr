@@ -53,7 +53,7 @@ impl SectionBody {
         &self.items
     }
 
-    pub fn to_tokens_inner(&self, scope: Scope, tokens: &mut TokenStream) {
+    pub fn to_tokens_inner(&self, mut scope: Scope, tokens: &mut TokenStream) {
         let mut stream = vec![];
 
         for (idx, item) in self.items.iter().enumerate() {
@@ -61,8 +61,8 @@ impl SectionBody {
                 let sb = self.get_stmts_before(idx);
                 let sa = self.get_stmts_after(idx);
 
-                let new_scope = scope.push(&sb, &sa);
-                let inner = section.quote_inner(new_scope);
+                scope.push_mut(&sb, &sa);
+                let inner = section.quote_inner(scope.clone());
 
                 stream.push(quote! {
                     mod catchr_scenarios {
