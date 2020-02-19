@@ -1,196 +1,92 @@
-![Rust](https://github.com/Dzejkop/catchr/workflows/Rust/badge.svg)
+# Catchr ![Rust](https://github.com/Dzejkop/catchr/workflows/Rust/badge.svg)
+*Experimental: Might eat your laundry!*
 
-# Catchr
-
-A testing framework for Rust inspired by [Catch for C++](link).
-
-Forget about `setup` and `teardown`. Forget about testing frameworks for `Rust` which attempt to mimic frameworks from other languages!. `Catchr` uses just one simple trick which will enable you to write concise, self-explaining and idiomatic tests for your project!
+A testing framework for Rust inspired by [Catch for C++](https://github.com/catchorg/Catch2).
 
 ## Quickstart
-Add `catchr = "0.1" to your `Cargo.toml` and start writing tests!
 
-### Example using `catchr::scenarios!` proc macro
+### Add `catchr = "0.2.0"` to your `Cargo.toml`
 
-Write BDD-style tests using the `when`, `then`, etc. keywords.
+### Write tests:
 ```rust
-#[cfg(test)]
-mod tests {
-    use my_crate::MyStruct;
+catchr::describe! {
+    section "my tests" {
+        given "x is equal to 1" {
+            let mut x = 1;
 
-    catchr::scenarios! {
-        case "MyStruct tests" {
-            // common setup code
-            let mut my_struct = MyStruct::new();
+            when "1 is added to x" {
+                x += 1;
 
-            given "foo is called on my_struct" {
-                my_struct.foo();
-
-                then "my_struct.bar() should equal 1" {
-                    // use regular Rust assertions
-                    assert_eq!(my_struct.bar(), 1);
+                then "x should equal 2" {
+                    assert_eq!(2, x);
                 }
             }
 
-            given "foo is not called on my_struct" {
-                then "my_struct.bar() should equal 0" {
-                    assert_eq!(my_struct.bar(), 1);
+            when "2 is added to x" {
+                x += 2;
+
+                then "x should equal 3" {
+                    assert_eq!(3, x);
                 }
             }
 
-            // common teardown code
-            // and assertions veryfing invariants correct for all test paths
-
-            assert!(my_struct.is_valid());
-            my_struct.cleanup();
+            // for all code paths
+            assert!(x >= 2);
         }
     }
 }
 ```
 
-Every "top-level" section like `then "my_struct.bar() should equal 1" { ... }` will be resolved as a separate test case.
-Each such test case will be located in a module reflecting the `case/when/then` structure.
-Furthermore the code will follow scoping.
+### `cargo test`
+```
+running 2 tests
+test tests::section_my_tests::given_x_is_equal_to_1::when_2_is_added_to_x::then_x_should_equal_3 ... ok
+test tests::section_my_tests::given_x_is_equal_to_1::when_1_is_added_to_x::then_x_should_equal_2 ... ok
 
-The above code will produce
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+```
 
+## How does it work?
+
+The code above will produce something like this
 ```rust
-#[cfg(test)]
-#[allow(unused)] // added by catchr, for reasons explained later
-mod tests {
-    use my_crate::MyStruct;
+mod section_my_tests {
+    use super::*;
 
-    mod catchr_scenarios {
+    mod given_x_is_equal_to_1 {
         use super::*;
 
-        mod mystruct_tests {
+        mod when_1_is_added_to_x {
             use super::*;
 
-            mod when_foo_is_called_on_my_struct {
-                use super::*;
-
-                #[test]
-                fn then_my_struct_bar_should_equal_1() {
-                    let mut my_struct = MyStruct::new();
+            #[test]
+            fn then_x_should_equal_2() {
+                let mut x = 1;
+                {
+                    x += 1;
                     {
-                        my_struct.foo();
-                        {
-                            assert_eq!(my_struct.bar(), 1);
-                        }
+                        assert_eq!(2, x);
                     }
-                    assert!(my_struct.is_valid());
-                    my_struct.cleanup();
                 }
+                assert!(x >= 2);
             }
+        }
 
-            mod when_foo_is_not_called_on_my_struct {
-                use super::*;
+        mod when_2_is_added_to_x {
+            use super::*;
 
-                #[test]
-                fn then_my_struct_bar_should_equal_0() {
-                    let mut my_struct = MyStruct::new();
+            #[test]
+            fn then_x_should_equal_3() {
+                let mut x = 1;
+                {
+                    x += 2;
                     {
-                        my_struct.foo();
-                        {
-                            assert_eq!(my_struct.bar(), 0);
-                        }
+                        assert_eq!(3, x);
                     }
-                    assert!(my_struct.is_valid());
-                    my_struct.cleanup();
                 }
+                assert!(x >= 2);
             }
         }
     }
 }
-```
-
-## Reference
-`Catchr` tests are made up of `sections`. Each section starts with a keyword, has a message and a body.
-
-### Supported section identifiers
-
-|  keyword  |   produces    |
-|-----------|---------------|
-| `case`    | `case_xxx`    |
-| `section` | `section_xxx` |
-| `when`    | `when_xxx`    |
-| `then`    | `then_xxx`    |
-| `given`   | `given_xxx`   |
-
-## Planned features
-
-### Case enumeration
-Enumerating through different input values with a `each $var_name in $values` section.
-
-```rust
-when "something" {
-    each msg in ["A", "B", "C"] {
-        assert_eq!(foo(msg), bar(msg));
-    }
-}
-```
-
-Will produce a test case for each of `msg` values
-```rust
-mod when_something {
-    use super::*;
-
-    #[test]
-    fn msg_is_a() {
-        let msg = "A";
-        assert_eq!(foo(msg), bar(msg));
-    }
-
-    #[test]
-    fn msg_is_b() {
-        let msg = "B";
-        assert_eq!(foo(msg), bar(msg));
-    }
-
-    #[test]
-    fn msg_is_c() {
-        let msg = "C";
-        assert_eq!(foo(msg), bar(msg));
-    }
-}
-```
-
-### Opt-in better test output
-If enabled with feature `catchr-messages`, each `catchr` generated test case will be prepended with a `CATCHR_MSG` constant. This constant can then be used in any assertions, printlns or dbgs, like so
-
-```
-section "Blah blah blah" {
-    given "Something is true" {
-        then "Something else is true" {
-            assert!(false, CATCHR_MSG);
-        }
-    }
-}
-```
-
-will produce
-
-```rust
-mod section_blah_blah_blah {
-    use super::*;
-
-    mod given_something_is_true {
-        use super::*;
-
-        const CATCHR_MSG: &str = "\nSection: Blah blah blah\n\tGiven: Something is true\n\t\tThen: Something else is true\n";
-        #[test]
-        fn then_something_else_is_true() {
-            assert!(false, CATCHR_MSG);
-        }
-    }
-}
-```
-
-which will fail with a nice message
-```
----- section_blah_blah_blah::given_something_is_true::then_something_else_is_true stdout ----
-thread 'section_blah_blah_blah::given_something_is_true::then_something_else_is_true' panicked at '
-Section: Blah blah blah
-	Given: Something is true
-		Then: Something else is true
-', src/lib.rs:11:13
 ```

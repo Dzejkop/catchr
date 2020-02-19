@@ -3,7 +3,10 @@ name = "catchr-core"
 version = "0.1.0"
 authors = ["Dzejkop <jakubtrad@gmail.com>"]
 edition = "2018"
-description = "A testing framework inspired by Catch for C++"
+description = "Core library of catchr the testing framework"
+repository = "https://github.com/Dzejkop/catchr"
+documentation = "https://docs.rs/catchr-core"
+readme = "README.md"
 license = "MIT"
 
 [dependencies]

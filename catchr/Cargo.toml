@@ -4,6 +4,9 @@ version = "0.1.0"
 authors = ["Dzejkop <jakubtrad@gmail.com>"]
 edition = "2018"
 description = "A testing framework inspired by Catch for C++"
+repository = "https://github.com/Dzejkop/catchr"
+documentation = "https://docs.rs/catchr-core"
+readme = "../README.md"
 license = "MIT"
 
 [lib]
