@@ -78,12 +78,7 @@ mod tests {
 
         let act = scope.quote_with(&[]);
 
-        assert_eq_string(
-            quote!(
-                {}
-            ),
-            act
-        );
+        assert_eq_string(quote!({}), act);
     }
 
     #[test]
@@ -92,29 +87,23 @@ mod tests {
 
         let act = scope.quote_with(&[
             parse_quote!(let x = 1;),
-            parse_quote!(assert_eq!(x, 1);)
+            parse_quote!(assert_eq!(x, 1);),
         ]);
 
         assert_eq_string(
-            quote!(
-                {
-                    let x = 1;
-                    assert_eq!(x, 1);
-                }
-            ),
-            act
+            quote!({
+                let x = 1;
+                assert_eq!(x, 1);
+            }),
+            act,
         );
     }
 
     #[test]
     fn quote_non_empty_scope() {
         let scope = Scope::new(
-            &[
-                parse_quote!(let x = 1;)
-            ],
-            &[
-                parse_quote!(assert_eq!(x, 1);)
-            ]
+            &[parse_quote!(let x = 1;)],
+            &[parse_quote!(assert_eq!(x, 1);)],
         );
 
         let act = scope.quote_with(&[]);
@@ -127,24 +116,18 @@ mod tests {
                 }
                 assert_eq!(x, 1);
             ),
-            act
+            act,
         );
     }
 
     #[test]
     fn quote_non_empty_scope_with_items() {
         let scope = Scope::new(
-            &[
-                parse_quote!(let x = 1;)
-            ],
-            &[
-                parse_quote!(assert_eq!(x, 1);)
-            ]
+            &[parse_quote!(let x = 1;)],
+            &[parse_quote!(assert_eq!(x, 1);)],
         );
 
-        let act = scope.quote_with(&[
-            parse_quote!(assert!(true);)
-        ]);
+        let act = scope.quote_with(&[parse_quote!(assert!(true);)]);
 
         assert_eq_string(
             quote!(
@@ -154,7 +137,7 @@ mod tests {
                 }
                 assert_eq!(x, 1);
             ),
-            act
+            act,
         );
     }
 
@@ -165,50 +148,36 @@ mod tests {
 
         let act = scope.quote_with(&[]);
 
-        assert_eq_string(
-            quote!(
-                {{}}
-            ),
-            act
-        );
+        assert_eq_string(quote!({ {} }), act);
     }
 
+    #[test]
     fn push_non_empty_scope() {
         let mut scope = Scope::new(
-            &[
-                parse_quote!(let x = 1;)
-            ],
-            &[
-                parse_quote!(assert_eq!(x, 1);)
-            ]
+            &[parse_quote!(let x = 1;)],
+            &[parse_quote!(assert_eq!(x, 1);)],
         );
 
         scope.push_mut(
-            &[
-                parse_quote!(assert!(true);)
-            ],
-            &[
-                parse_quote!(assert!(false);)
-            ]
+            &[parse_quote!(assert!(true);)],
+            &[parse_quote!(assert!(false);)],
         );
 
-        let act = scope.quote_with(&[
-            parse_quote!(assert!(true);)
-        ]);
+        let act = scope.quote_with(&[parse_quote!(assert!(true);)]);
 
         assert_eq_string(
             quote!(
                 let x = 1;
                 {
-                    assert!(true)
+                    assert!(true);
                     {
                         assert!(true);
                     }
-                    assert!(false)
+                    assert!(false);
                 }
                 assert_eq!(x, 1);
             ),
-            act
+            act,
         );
     }
 }
