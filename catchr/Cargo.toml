@@ -1,6 +1,6 @@
 [package]
 name = "catchr"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["Dzejkop <jakubtrad@gmail.com>"]
 edition = "2018"
 description = "A testing framework inspired by Catch for C++"
