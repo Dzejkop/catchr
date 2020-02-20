@@ -78,3 +78,28 @@ impl Parse for SectionKeyword {
         }
     }
 }
+
+#[cfg(test)]
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test_case::test_case;
+
+    #[test_case("when"      => SectionKeyword::When     ; "when")]
+    #[test_case("given"     => SectionKeyword::Given    ; "given")]
+    #[test_case("section"   => SectionKeyword::Section  ; "section")]
+    #[test_case("then"      => SectionKeyword::Then     ; "then")]
+    #[test_case("case"      => SectionKeyword::Case     ; "case")]
+    fn parse(s: &str) -> SectionKeyword {
+        syn::parse_str(s).unwrap()
+    }
+
+    #[test_case(SectionKeyword::When,    "when"     ; "when")]
+    #[test_case(SectionKeyword::Given,   "given"    ; "given")]
+    #[test_case(SectionKeyword::Section, "section"  ; "section")]
+    #[test_case(SectionKeyword::Then,    "then"     ; "then")]
+    #[test_case(SectionKeyword::Case,    "case"     ; "case")]
+    fn to_name(kw: SectionKeyword, exp: &str) {
+        assert_eq!(&kw.to_name(), exp);
+    }
+}
