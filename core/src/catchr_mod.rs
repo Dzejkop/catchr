@@ -3,7 +3,7 @@ use proc_macro2::TokenStream;
 use quote::{quote, ToTokens, TokenStreamExt};
 use syn::parse::{self, Parse, ParseStream};
 use syn::token::{Brace, Mod};
-use syn::{Attribute, Ident, Item, Visibility};
+use syn::{AttrStyle, Attribute, Ident, Item, Visibility};
 
 #[derive(Debug, Clone)]
 #[allow(clippy::large_enum_variant)]
@@ -51,12 +51,22 @@ impl ToTokens for CatchrMod {
             mod_token,
             ident,
         } = &self;
+
         let content = &content.1;
 
+        let outer_attrs =
+            attrs.iter().filter(|attr| attr.style == AttrStyle::Outer);
+
+        let inner_attrs = attrs.iter().filter(|attr| match attr.style {
+            AttrStyle::Inner(_) => true,
+            _ => false,
+        });
+
         let q = quote! {
-            #(#attrs)*
+            #(#outer_attrs)*
             #[allow(unused)]
             #vis #mod_token #ident {
+                #(#inner_attrs)*
                 #(#content)*
             }
         };
@@ -108,10 +118,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn foo() {
+    fn parse_quote() {
         let s = r#"
             #[hello]
             mod whatever {
+                #![goodbye]
                 use super::*;
 
                 when "whatever" {
@@ -122,6 +133,33 @@ mod tests {
                 }
             }"#;
 
-        syn::parse_str::<CatchrMod>(s).unwrap();
+        let catchr_mod = syn::parse_str::<CatchrMod>(s).unwrap();
+
+        let act = catchr_mod.to_token_stream();
+
+        let exp = quote!(
+            #[hello]
+            #[allow(unused)]
+            mod whatever {
+                #![goodbye]
+                use super::*;
+
+                mod when_whatever {
+                    use super::*;
+
+                    #[test]
+                    fn then_hello() {
+                        {
+                            let x = 1;
+                            {
+                                assert_eq!(x, 1);
+                            }
+                        }
+                    }
+                }
+            }
+        );
+
+        assert_eq!(exp.to_string(), act.to_string());
     }
 }

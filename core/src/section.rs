@@ -54,7 +54,7 @@ impl Section {
         SectionKeyword::peek(input)
     }
 
-    fn to_tokens_inner(&self, mut scope: Scope, tokens: &mut TokenStream) {
+    fn to_tokens_inner(&self, scope: Scope, tokens: &mut TokenStream) {
         if self.body.is_top_level() {
             let my_stmts: Vec<_> =
                 self.body.items().iter().filter_map(|i| i.stmt()).collect();
@@ -80,8 +80,10 @@ impl Section {
                 let sb = self.body.get_stmts_before(idx);
                 let sa = self.body.get_stmts_after(idx);
 
+                let mut scope = scope.clone();
                 scope.push_mut(&sb, &sa);
-                let inner = section.quote_inner(scope.clone());
+
+                let inner = section.quote_inner(scope);
 
                 stream.push(inner);
             }
@@ -120,5 +122,104 @@ impl Parse for Section {
         let inner_body = content.parse::<SectionBody>()?;
 
         Ok(Section::new(section_keyword, name, inner_body))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test_case::test_case;
+
+    #[test_case(
+        r#"
+            section "tests" {
+                let x = 1;
+                when "hello" {
+                    assert!(true);
+                    then "whatever" {
+                        assert!(true);
+                    }
+                }
+
+                assert_eq!(x, 1);
+            }
+        "#,
+        quote!(
+            mod section_tests {
+                use super::*;
+
+                mod when_hello {
+                    use super::*;
+
+                    #[test]
+                    fn then_whatever() {
+                        {
+                            let x = 1;
+                            {
+                                assert!(true);
+                                {
+                                    assert!(true);
+                                }
+                            }
+                            assert_eq!(x, 1);
+                        }
+                    }
+                }
+            }
+        )
+    )]
+    #[test_case(
+        r#"
+            section "tests" {
+                assert!(1 == 1);
+
+                case "one" {
+                    assert!(2 == 2);
+                }
+
+                assert!(3 == 3);
+
+                case "two" {
+                    assert!(4 == 4);
+                }
+
+                assert!(5 == 5);
+            }
+        "#,
+        quote!(
+            mod section_tests {
+                use super::*;
+
+                #[test]
+                fn case_one() {
+                    {
+                        assert!(1 == 1);
+                        {
+                            assert!(2 == 2);
+                        }
+                        assert!(3 == 3);
+                        assert!(5 == 5);
+                    }
+                }
+
+                #[test]
+                fn case_two() {
+                    {
+                        assert!(1 == 1);
+                        assert!(3 == 3);
+                        {
+                            assert!(4 == 4);
+                        }
+                        assert!(5 == 5);
+                    }
+                }
+            }
+        )
+    )]
+    fn parse_and_quote(s: &str, exp: TokenStream) {
+        let section = syn::parse_str::<Section>(s).unwrap();
+        let section = section.to_token_stream();
+
+        assert_eq!(exp.to_string(), section.to_string());
     }
 }

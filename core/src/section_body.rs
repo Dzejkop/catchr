@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::{quote, ToTokens, TokenStreamExt};
+use quote::{quote, TokenStreamExt};
 use syn::parse::{self, Parse, ParseStream};
 
 use crate::scope::Scope;
@@ -75,14 +75,6 @@ impl SectionBody {
         }
 
         tokens.append_all(stream);
-    }
-}
-
-impl ToTokens for SectionBody {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        let scope = Scope::empty();
-
-        self.to_tokens_inner(scope, tokens);
     }
 }
 
