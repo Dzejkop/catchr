@@ -1,5 +1,6 @@
 # Catchr ![Rust](https://github.com/Dzejkop/catchr/workflows/Rust/badge.svg)
-*Experimental: Might eat your laundry!*
+
+_Experimental: Might eat your laundry!_
 
 A testing framework for Rust inspired by [Catch for C++](https://github.com/catchorg/Catch2).
 
@@ -8,6 +9,7 @@ A testing framework for Rust inspired by [Catch for C++](https://github.com/catc
 ### Add `catchr = "0.2.1"` to your `Cargo.toml`
 
 ### Write tests:
+
 ```rust
 #[cfg(test)]
 mod tests {
@@ -41,6 +43,7 @@ mod tests {
 ```
 
 ### `cargo test`
+
 ```
 running 2 tests
 test tests::section_my_tests::given_x_is_equal_to_1::when_2_is_added_to_x::then_x_should_equal_3 ... ok
@@ -50,6 +53,7 @@ test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
 ```
 
 ## Sections
+
 Each test section consists of a keyword, a description and a body.
 
 ```rust
@@ -100,6 +104,7 @@ case "a" {
 ```
 
 if the test case was expanded without scoping, we'd get
+
 ```rust
 let mut tmp = tempfile().unwrap();
 
@@ -115,6 +120,7 @@ assert_eq!(bytes_in_tmp_file, 3);
 which fails to compile!
 
 so `catchr` will expand this test case into
+
 ```rust
 let mut tmp = tempfile().unwrap();
 
@@ -132,6 +138,7 @@ assert_eq!(bytes_in_tmp_file, 3);
 ## How does it work?
 
 The code from the [**Quickstart**](##Quickstart) section will expand into something like this:
+
 ```rust
 #[cfg(test)]
 mod tests {

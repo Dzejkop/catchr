@@ -1,5 +1,5 @@
+use proc_macro2::TokenStream;
 use quote::quote;
-use syn::export::TokenStream2;
 
 #[derive(Clone, Debug)]
 pub struct Scope {
@@ -33,7 +33,7 @@ impl Scope {
         }
     }
 
-    pub fn quote_with(&self, stmts: &[syn::Stmt]) -> TokenStream2 {
+    pub fn quote_with(&self, stmts: &[syn::Stmt]) -> TokenStream {
         let Scope {
             before,
             inner,
