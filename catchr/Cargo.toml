@@ -2,7 +2,7 @@
 name = "catchr"
 version = "0.2.3"
 authors = ["Dzejkop <jakubtrad@gmail.com>"]
-edition = "2018"
+edition = "2021"
 description = "A testing framework inspired by Catch for C++"
 repository = "https://github.com/Dzejkop/catchr"
 documentation = "https://docs.rs/catchr-core"
@@ -18,4 +18,3 @@ quote = "1.0"
 proc-macro2 = { version = "1.0", features = [] }
 itertools = "0.8.2"
 catchr-core = "0.1.3"
-

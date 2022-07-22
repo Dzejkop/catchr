@@ -1,6 +1,6 @@
 extern crate proc_macro;
 
-use catchr_core::{CatchrMod, Section};
+use catchr_core::{CatchrMode, Section};
 use proc_macro::TokenStream;
 use quote::ToTokens;
 use syn::parse_macro_input;
@@ -15,10 +15,12 @@ pub fn describe(input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
-pub fn module(input: TokenStream) -> TokenStream {
-    let catchr_mod = parse_macro_input!(input as CatchrMod);
+pub fn describe_tokio(input: TokenStream) -> TokenStream {
+    let section_body = parse_macro_input!(input as Section);
 
-    let output = catchr_mod.to_token_stream();
+    let output = section_body
+        .with_mode(CatchrMode::Tokio)
+        .to_token_stream();
 
     output.into()
 }

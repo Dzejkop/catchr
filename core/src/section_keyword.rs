@@ -82,8 +82,9 @@ impl Parse for SectionKeyword {
 #[cfg(test)]
 #[cfg(test)]
 mod tests {
-    use super::*;
     use test_case::test_case;
+
+    use super::*;
 
     #[test_case("when"      => SectionKeyword::When     ; "when")]
     #[test_case("given"     => SectionKeyword::Given    ; "given")]
