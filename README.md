@@ -1,4 +1,7 @@
-# Catchr ![Rust](https://github.com/Dzejkop/catchr/workflows/Rust/badge.svg)
+![Rust](https://github.com/Dzejkop/catchr/workflows/Rust/badge.svg)
+[![Crates.io](https://img.shields.io/crates/d/catchr.svg)](https://crates.io/crates/catchr)
+
+# Catchr
 
 _Experimental: Might eat your laundry!_
 
