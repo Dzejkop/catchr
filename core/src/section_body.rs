@@ -2,6 +2,7 @@ use proc_macro2::TokenStream;
 use quote::{quote, TokenStreamExt};
 use syn::parse::{self, Parse, ParseStream};
 
+use crate::catchr_mode::CatchrMode;
 use crate::scope::Scope;
 use crate::section::Section;
 use crate::section_item::SectionItem;
@@ -13,6 +14,16 @@ pub struct SectionBody {
 }
 
 impl SectionBody {
+    pub fn with_mode(mut self, test_attribute: CatchrMode) -> Self {
+        self.items = self
+            .items
+            .into_iter()
+            .map(|item| item.with_mode(test_attribute))
+            .collect();
+
+        self
+    }
+
     pub fn empty() -> Self {
         Self { items: vec![] }
     }

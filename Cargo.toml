@@ -1,2 +1,6 @@
 [workspace]
 members = ["catchr", "core"]
+
+[patch.crates-io]
+catchr-core = { path = "core" }
+catchr = { path = "catchr" }

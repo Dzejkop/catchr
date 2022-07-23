@@ -1,19 +1,22 @@
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{quote, ToTokens, TokenStreamExt};
 use syn::parse::{self, Parse, ParseStream};
+use utils::extract_literal_string;
 
+use crate::catchr_mode::CatchrMode;
 use crate::scope::Scope;
 use crate::section_body::SectionBody;
 use crate::section_item::SectionItem;
 use crate::section_keyword::SectionKeyword;
 use crate::utils;
-use utils::extract_literal_string;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Section {
     section_kind: SectionKeyword,
     name: String,
     body: SectionBody,
+
+    test_attribute: CatchrMode,
 }
 
 impl Section {
@@ -26,7 +29,14 @@ impl Section {
             section_kind,
             name: name.to_string(),
             body,
+            test_attribute: CatchrMode::Regular,
         }
+    }
+
+    pub fn with_mode(mut self, test_attribute: CatchrMode) -> Self {
+        self.test_attribute = test_attribute;
+        self.body = self.body.with_mode(test_attribute);
+        self
     }
 
     fn quote_name(&self) -> Ident {
@@ -63,12 +73,20 @@ impl Section {
 
             let inner = scope.quote_with(&my_stmts);
 
-            tokens.append_all(quote! {
-                #[test]
-                fn #name() {
-                    #inner
-                }
-            });
+            match self.test_attribute {
+                CatchrMode::Regular => tokens.append_all(quote! {
+                    #[test]
+                    fn #name() {
+                        #inner
+                    }
+                }),
+                CatchrMode::Tokio => tokens.append_all(quote! {
+                    #[tokio::test]
+                    async fn #name() {
+                        #inner
+                    }
+                }),
+            }
 
             return;
         }
@@ -127,99 +145,205 @@ impl Parse for Section {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use test_case::test_case;
 
-    #[test_case(
-        r#"
-            section "tests" {
-                let x = 1;
-                when "hello" {
-                    assert!(true);
-                    then "whatever" {
+    use super::*;
+
+    mod regular {
+        use test_case::test_case;
+
+        use super::*;
+
+        #[test_case(
+            r#"
+                section "tests" {
+                    let x = 1;
+                    when "hello" {
                         assert!(true);
+                        then "whatever" {
+                            assert!(true);
+                        }
+                    }
+
+                    assert_eq!(x, 1);
+                }
+            "#,
+            quote!(
+                mod section_tests {
+                    use super::*;
+
+                    mod when_hello {
+                        use super::*;
+
+                        #[test]
+                        fn then_whatever() {
+                            {
+                                let x = 1;
+                                {
+                                    assert!(true);
+                                    {
+                                        assert!(true);
+                                    }
+                                }
+                                assert_eq!(x, 1);
+                            }
+                        }
                     }
                 }
+            )
+        )]
+        #[test_case(
+            r#"
+                section "tests" {
+                    assert!(1 == 1);
 
-                assert_eq!(x, 1);
-            }
-        "#,
-        quote!(
-            mod section_tests {
-                use super::*;
+                    case "one" {
+                        assert!(2 == 2);
+                    }
 
-                mod when_hello {
+                    assert!(3 == 3);
+
+                    case "two" {
+                        assert!(4 == 4);
+                    }
+
+                    assert!(5 == 5);
+                }
+            "#,
+            quote!(
+                mod section_tests {
                     use super::*;
 
                     #[test]
-                    fn then_whatever() {
+                    fn case_one() {
                         {
-                            let x = 1;
+                            assert!(1 == 1);
                             {
-                                assert!(true);
+                                assert!(2 == 2);
+                            }
+                            assert!(3 == 3);
+                            assert!(5 == 5);
+                        }
+                    }
+
+                    #[test]
+                    fn case_two() {
+                        {
+                            assert!(1 == 1);
+                            assert!(3 == 3);
+                            {
+                                assert!(4 == 4);
+                            }
+                            assert!(5 == 5);
+                        }
+                    }
+                }
+            )
+        )]
+        fn parse_and_quote(s: &str, exp: TokenStream) {
+            let section = syn::parse_str::<Section>(s).unwrap();
+            let section = section.to_token_stream();
+
+            assert_eq!(exp.to_string(), section.to_string());
+        }
+    }
+
+    mod tokio {
+        use test_case::test_case;
+
+        use super::*;
+
+        #[test_case(
+            r#"
+                section "tests" {
+                    let x = 1;
+                    when "hello" {
+                        assert!(true);
+                        then "whatever" {
+                            assert!(true);
+                        }
+                    }
+
+                    assert_eq!(x, 1);
+                }
+            "#,
+            quote!(
+                mod section_tests {
+                    use super::*;
+
+                    mod when_hello {
+                        use super::*;
+
+                        #[tokio::test]
+                        async fn then_whatever() {
+                            {
+                                let x = 1;
                                 {
                                     assert!(true);
+                                    {
+                                        assert!(true);
+                                    }
                                 }
+                                assert_eq!(x, 1);
                             }
-                            assert_eq!(x, 1);
                         }
                     }
                 }
-            }
-        )
-    )]
-    #[test_case(
-        r#"
-            section "tests" {
-                assert!(1 == 1);
+            )
+        )]
+        #[test_case(
+            r#"
+                section "tests" {
+                    assert!(1 == 1);
 
-                case "one" {
-                    assert!(2 == 2);
+                    case "one" {
+                        assert!(2 == 2);
+                    }
+
+                    assert!(3 == 3);
+
+                    case "two" {
+                        assert!(4 == 4);
+                    }
+
+                    assert!(5 == 5);
                 }
+            "#,
+            quote!(
+                mod section_tests {
+                    use super::*;
 
-                assert!(3 == 3);
-
-                case "two" {
-                    assert!(4 == 4);
-                }
-
-                assert!(5 == 5);
-            }
-        "#,
-        quote!(
-            mod section_tests {
-                use super::*;
-
-                #[test]
-                fn case_one() {
-                    {
-                        assert!(1 == 1);
+                    #[tokio::test]
+                    async fn case_one() {
                         {
-                            assert!(2 == 2);
+                            assert!(1 == 1);
+                            {
+                                assert!(2 == 2);
+                            }
+                            assert!(3 == 3);
+                            assert!(5 == 5);
                         }
-                        assert!(3 == 3);
-                        assert!(5 == 5);
                     }
-                }
 
-                #[test]
-                fn case_two() {
-                    {
-                        assert!(1 == 1);
-                        assert!(3 == 3);
+                    #[tokio::test]
+                    async fn case_two() {
                         {
-                            assert!(4 == 4);
+                            assert!(1 == 1);
+                            assert!(3 == 3);
+                            {
+                                assert!(4 == 4);
+                            }
+                            assert!(5 == 5);
                         }
-                        assert!(5 == 5);
                     }
                 }
-            }
-        )
-    )]
-    fn parse_and_quote(s: &str, exp: TokenStream) {
-        let section = syn::parse_str::<Section>(s).unwrap();
-        let section = section.to_token_stream();
+            )
+        )]
+        fn parse_and_quote(s: &str, exp: TokenStream) {
+            let section = syn::parse_str::<Section>(s).unwrap();
+            let section =
+                section.with_mode(CatchrMode::Tokio).to_token_stream();
 
-        assert_eq!(exp.to_string(), section.to_string());
+            assert_eq!(exp.to_string(), section.to_string());
+        }
     }
 }

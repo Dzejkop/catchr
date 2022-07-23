@@ -1,5 +1,4 @@
-use syn;
-
+use crate::catchr_mode::CatchrMode;
 use crate::section::Section;
 
 #[allow(clippy::large_enum_variant)]
@@ -10,11 +9,17 @@ pub enum SectionItem {
 }
 
 impl SectionItem {
-    pub fn is_stmt(&self) -> bool {
+    pub fn with_mode(self, test_attribute: CatchrMode) -> Self {
         match self {
-            Self::Stmt(_) => true,
-            _ => false,
+            SectionItem::Sep(section) => {
+                SectionItem::Sep(section.with_mode(test_attribute))
+            }
+            stmt => stmt,
         }
+    }
+
+    pub fn is_stmt(&self) -> bool {
+        matches!(self, Self::Stmt(_))
     }
 
     pub fn stmt(&self) -> Option<syn::Stmt> {

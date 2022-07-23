@@ -64,9 +64,10 @@ impl Scope {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use quote::quote;
     use syn::parse_quote;
+
+    use super::*;
 
     fn assert_eq_string(exp: impl ToString, act: impl ToString) {
         assert_eq!(exp.to_string(), act.to_string());
