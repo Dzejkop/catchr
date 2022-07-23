@@ -6,7 +6,7 @@ A testing framework for Rust inspired by [Catch for C++](https://github.com/catc
 
 ## Quickstart
 
-### Add `catchr = "0.2.1"` to your `Cargo.toml`
+### Add `catchr = "0.3.0"` to your `Cargo.toml`
 
 ### Write tests:
 
@@ -133,6 +133,24 @@ tmp.seek(SeekFrom::Start(0)).unwrap();
 let bytes_in_tmp_file = tmp.seek(SeekFrom::End(0)).unwrap();
 
 assert_eq!(bytes_in_tmp_file, 3);
+```
+
+## Async support
+
+You can also use the `describe_tokio` macro to generate async tests that work with the tokio runtime.
+First you need to make sure that you have `tokio` in your dependencies and it has the required features - my recommendation is to use `features = ["full]"`.
+
+Next just write
+
+```rust
+catchr::describe_tokio! {
+    when "Something" {
+        then "Something" {
+            // it's possible to `.await` here
+            assert!(true);
+        }
+    }
+}
 ```
 
 ## How does it work?
